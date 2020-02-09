@@ -1,21 +1,27 @@
 package com.aaqanddev.contentproviderexample
 
+import android.Manifest.permission.READ_CONTACTS
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.util.Log
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.material.snackbar.Snackbar
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
 private const val TAG = "MainActivity"
+private const val REQUEST_CODE_READ_CONTACTS = 1
 
 class MainActivity : AppCompatActivity() {
 
+    private var readGranted = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,8 +29,22 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
+        val hasReadContactPermission = ContextCompat
+            .checkSelfPermission(this, READ_CONTACTS)
+        Log.d(TAG, "onCreate: checkselfPermission returned $hasReadContactPermission")
+
+        if (hasReadContactPermission==PackageManager.PERMISSION_GRANTED){
+            Log.d(TAG, "onCreate: permission granted")
+            readGranted = true //TODO don't do this
+        }  else{
+            Log.d(TAG, "onCreate: requesting permission")
+            ActivityCompat.requestPermissions(this, arrayOf(READ_CONTACTS), REQUEST_CODE_READ_CONTACTS)
+        }
+
         fab.setOnClickListener { view ->
             Log.d(TAG, "fab onClick: starts")
+            if (readGranted==true){
+
             val projection = arrayOf(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
 
             val cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI,
@@ -41,9 +61,37 @@ class MainActivity : AppCompatActivity() {
             }
             val adapter = ArrayAdapter<String>(this,R.layout.contact_detail, R.id.name, contacts)
             content_names.adapter = adapter
+            } else{
+                Snackbar.make(view, "Permission for contacts must be granted for app to function",
+                    Snackbar.LENGTH_LONG).setAction("Action", null).show()
+            }
 
             Log.d(TAG, "fab onClick: ends")
         }
+        Log.d(TAG, "onCreate: ends")
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        Log.d(TAG, "onRequestPermissionsResult: starts")
+        when (requestCode){
+            REQUEST_CODE_READ_CONTACTS -> {
+                readGranted = if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    //permission granted, do contacts-related task
+                    Log.d(TAG, "onRequestPermissionResult: permission granted")
+                    true
+                } else{
+                    //permission denied. disable functionality dependent on permission
+                    Log.d(TAG, "onRequestPermissionsResult: permission refused")
+                    false
+                }
+                //fab.isEnabled = readGranted
+            }
+        }
+        Log.d(TAG, "onRequestPermissionsResult: ends")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
