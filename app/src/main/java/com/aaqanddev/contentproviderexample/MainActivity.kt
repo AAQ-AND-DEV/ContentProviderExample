@@ -1,6 +1,7 @@
 package com.aaqanddev.contentproviderexample
 
 import android.Manifest.permission.READ_CONTACTS
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -25,7 +26,7 @@ private const val REQUEST_CODE_READ_CONTACTS = 1
 
 class MainActivity : AppCompatActivity() {
 
-    private var readGranted = false
+    //private var readGranted = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
         if (hasReadContactPermission==PackageManager.PERMISSION_GRANTED){
             Log.d(TAG, "onCreate: permission granted")
-            readGranted = true //TODO don't do this
+            //readGranted = true //TODO don't do this
         }  else{
             Log.d(TAG, "onCreate: requesting permission")
             ActivityCompat.requestPermissions(this, arrayOf(READ_CONTACTS), REQUEST_CODE_READ_CONTACTS)
@@ -47,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
         fab.setOnClickListener { view ->
             Log.d(TAG, "fab onClick: starts")
-            if (readGranted==true){
+            if (ContextCompat.checkSelfPermission(this, READ_CONTACTS)== PackageManager.PERMISSION_GRANTED){
 
             val projection = arrayOf(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
 
@@ -99,14 +100,15 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "onRequestPermissionsResult: starts")
         when (requestCode){
             REQUEST_CODE_READ_CONTACTS -> {
-                readGranted = if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                //readGranted = if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     //permission granted, do contacts-related task
                     Log.d(TAG, "onRequestPermissionResult: permission granted")
-                    true
+
                 } else{
                     //permission denied. disable functionality dependent on permission
                     Log.d(TAG, "onRequestPermissionsResult: permission refused")
-                    false
+
                 }
                 //fab.isEnabled = readGranted
             }
