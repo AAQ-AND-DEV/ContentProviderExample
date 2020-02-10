@@ -1,14 +1,18 @@
 package com.aaqanddev.contentproviderexample
 
 import android.Manifest.permission.READ_CONTACTS
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
+import android.provider.Settings
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
@@ -63,7 +67,23 @@ class MainActivity : AppCompatActivity() {
             content_names.adapter = adapter
             } else{
                 Snackbar.make(view, "Permission for contacts must be granted for app to function",
-                    Snackbar.LENGTH_LONG).setAction("Action", null).show()
+                    Snackbar.LENGTH_INDEFINITE).setAction("Grant Access") {
+                    Log.d(TAG, "SnackBar onClick: starts")
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(this, READ_CONTACTS)){
+                        Log.d(TAG, "Snackbar onClick: calling requestPermissions")
+                        ActivityCompat.requestPermissions(this, arrayOf(READ_CONTACTS), REQUEST_CODE_READ_CONTACTS)
+                    } else{
+                        //the user has permanently denied permission, take to app settings
+                        Log.d(TAG, "snackbar onClick: launching settings")
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        val uri = Uri.fromParts("package", this.packageName, null)
+                        Log.d(TAG, "SnackBar onClick: Uri is  $uri")
+                        intent.data = uri
+                        this.startActivity(intent)
+                    }
+                    Log.d(TAG, "snackbar onclick: ends")
+                }.show()
             }
 
             Log.d(TAG, "fab onClick: ends")
